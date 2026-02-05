@@ -6,10 +6,12 @@ import userRoute from "./routes/userRoute.js";
 const app = express();
 
 const PORT = process.env.PORT || 3000;
+
+//middleware
 app.use(express.json());
 app.use("/user", userRoute); //localhost:8000/user/register
 
-http: app.listen(PORT, () => {
+app.listen(PORT, () => {
   connectDB();
   console.log(`Server is running on ${PORT}`);
 });

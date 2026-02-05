@@ -1,4 +1,8 @@
 import { User } from "../models/userModel.js";
+import bcrypt from "bcryptjs";
+import { sendVerificationEmail } from "../utils/sendVerificationEmail.js";
+import jwt from "jsonwebtoken";
+import "dotenv/config";
 
 export const registerUser = async (req, res) => {
   try {
@@ -17,11 +21,25 @@ export const registerUser = async (req, res) => {
         message: "User already exists",
       });
     }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await User.create({
       userName,
       email,
-      password,
+      password: hashedPassword,
     });
+
+    // 🔐 Verification token
+    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    // ✉️ Send verification email
+    await sendVerificationEmail(token, email, userName);
+
+    newUser.token = token;
+    await newUser.save();
+
     return res.status(201).json({
       success: true,
       message: "User registered successfully",
